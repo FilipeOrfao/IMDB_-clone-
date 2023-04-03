@@ -93,7 +93,7 @@ async function displayMovieDitails() {
   // overlay for background image
 
   displayBackgroundImage("movie", movie.backdrop_path);
-
+  displayCast("movie", movieId);
   const div = document.createElement("div");
 
   const numberFormatter = Intl.NumberFormat("en", { maximumSignificantDigits: 3 });
@@ -184,6 +184,33 @@ async function displayShowDetails() {
         </div>`;
 
   document.querySelector("#show-details").appendChild(div);
+}
+
+async function displayCast(type, id) {
+  const { cast } = await fetchAPIData(`${type}/${id}/credits`);
+  console.log(cast);
+
+  const div = document.createElement("div");
+  div.setAttribute("id", "cast");
+  document.querySelector("#movie-details").appendChild(div);
+
+  cast.forEach((a) => {
+    const actor = document.createElement("div");
+    actor.setAttribute("class", "cast");
+    actor.innerHTML = `
+    <div class="actor">
+      <div class="circle-pic">
+        <img src="https://image.tmdb.org/t/p/w200${a.profile_path}" alt="${a.name}">
+      </div>
+      <div>
+        <p class="actor-name">${a.name}</p>
+        <p class="character-name">${a.character}</p>
+      </div>
+    </div>
+    `;
+    div.appendChild(actor);
+    // console.log(`https://image.tmdb.org/t/p/original/${a.profile_path}`);
+  });
 }
 
 function showSpinner() {
