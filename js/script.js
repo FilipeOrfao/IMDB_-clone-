@@ -8,7 +8,14 @@ const global = {
     totalResuts: 0,
   },
   // replace your api key
-  api: { API_URL: `https://api.themoviedb.org/3/`, apiKey: `` },
+  api: {
+    API_URL: `https://api.themoviedb.org/3/`,
+    apiKey: async () => {
+      const res = await fetch("./api_key.json");
+      const data = await res.json();
+      return data[0].api_key;
+    },
+  },
 };
 // console.log(window.location.pathname);
 
@@ -144,9 +151,10 @@ async function displayShowDetails() {
   const showId = window.location.search.split("=")[1];
 
   const show = await fetchAPIData(`tv/${showId}`);
-  console.log(show);
+  // console.log(show);
 
   displayBackgroundImage("show", show.backdrop_path);
+  displayCast("tv", showId);
 
   const div = document.createElement("div");
 
@@ -192,7 +200,7 @@ async function displayCast(type, id) {
 
   const div = document.createElement("div");
   div.setAttribute("id", "cast");
-  document.querySelector("#movie-details").appendChild(div);
+  document.querySelector(`#${type === "movie" ? "movie" : "show"}-details`).appendChild(div);
 
   cast.forEach((a) => {
     const actor = document.createElement("div");
@@ -200,7 +208,9 @@ async function displayCast(type, id) {
     actor.innerHTML = `
     <div class="actor">
       <div class="circle-pic">
-        <img src="https://image.tmdb.org/t/p/w200${a.profile_path}" alt="${a.name}">
+        <a href="person-details.html?id=${a.id}">
+          <img src="https://image.tmdb.org/t/p/w200${a.profile_path}" alt="${a.name}">
+        </a>
       </div>
       <div>
         <p class="actor-name">${a.name}</p>
@@ -211,6 +221,72 @@ async function displayCast(type, id) {
     div.appendChild(actor);
     // console.log(`https://image.tmdb.org/t/p/original/${a.profile_path}`);
   });
+}
+
+async function displayPersonDetails() {
+  const personId = window.location.search.split("=")[1];
+
+  const personDetails = await fetchAPIData(`person/${personId}`);
+  // const personDetails = await fetchAPIData(`person/${personId}/movie_credits`);
+
+  const age = calcAge(personDetails.birthday, personDetails.deathday);
+  console.log(age);
+
+  const div = document.createElement("div");
+
+  div.innerHTML = `
+        <div class="details-top">
+          <div>
+            <img src="https://image.tmdb.org/t/p/w300${personDetails.profile_path}" class="card-img-top" alt="Show Name" />
+          </div>
+          <div>
+            <h2>${personDetails.name}</h2>
+            <p>
+              <i class="fas fa-star text-primary"></i>
+              8 / 10
+            </p>
+            <p class="text-muted">Born in: ${personDetails.birthday} (${age})</p>
+            <p>
+              ${personDetails.biography}
+            </p>
+            <!--<h5>Genres</h5>
+            <ul class="list-group">
+              <li>Genre 1</li>
+              <li>Genre 2</li>
+              <li>Genre 3</li>
+            </ul>-->
+            ${personDetails.homepage !== null ? `<a href="${personDetails.homepage}" target="${personDetails.homepage}" class="btn">Visit Show Homepage</a>` : ""}
+          </div>
+        </div>
+        <div class="details-bottom">
+          
+        </div>`;
+
+  document.querySelector("#person-details").appendChild(div);
+}
+
+function calcAge(born, death) {
+  if (death === null) {
+    const birthDate = new Date(born);
+    const today = new Date();
+    let years = today.getFullYear() - birthDate.getFullYear();
+
+    if (today.getMonth() < birthDate.getMonth() || (today.getMonth() == birthDate.getMonth() && today.getDate() < birthDate.getDate())) {
+      years--;
+    }
+
+    return years;
+  }
+  const birthDate = new Date(born);
+  const today = new Date(death);
+  let years = today.getFullYear() - birthDate.getFullYear();
+
+  if (today.getMonth() < birthDate.getMonth() || (today.getMonth() == birthDate.getMonth() && today.getDate() < birthDate.getDate())) {
+    years--;
+  }
+
+  return years;
+  return;
 }
 
 function showSpinner() {
@@ -416,7 +492,7 @@ async function fetchAPIData(endpoint) {
 
   showSpinner();
 
-  const res = await fetch(`${global.api.API_URL}${endpoint}?api_key=${global.api.apiKey}&language=en-US`, {
+  const res = await fetch(`${global.api.API_URL}${endpoint}?api_key=${await global.api.apiKey()}&language=en-US`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -433,7 +509,7 @@ async function fetchAPIData(endpoint) {
 async function searchAPIData() {
   // Register your key at https://www.themoviedb.org/gettings/api and enter here
   const API_URL = global.api.API_URL;
-  const apiKey = global.api.apiKey;
+  const apiKey = await global.api.apiKey();
 
   showSpinner();
 
@@ -453,7 +529,8 @@ async function searchAPIData() {
 
 // init app
 function init() {
-  const start = "/011_%20flixx_movie_app";
+  // const start = "/011_%20flixx_movie_app";
+  const start = "/modern_js_form_the_beginning_2.0/011_%20flixx_movie_app";
   switch (global.currentPage) {
     case `${start}/`:
     case `${start}/index.html`:
@@ -477,6 +554,10 @@ function init() {
     case `${start}/search.html`:
       console.log("Search");
       search();
+      break;
+    case `${start}/person-details.html`:
+      console.log("Person");
+      displayPersonDetails();
       break;
   }
 
