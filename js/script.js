@@ -209,11 +209,13 @@ async function displayCast(type, id) {
     <div class="actor">
       <div class="circle-pic">
         <a href="person-details.html?id=${a.id}">
-          <img src="https://image.tmdb.org/t/p/w200${a.profile_path}" alt="${a.name}">
+          <img src="${a.profile_path ? `https://image.tmdb.org/t/p/w200${a.profile_path}` : `images/no-image.jpg`}" alt="${a.name}">
         </a>
       </div>
-      <div>
-        <p class="actor-name">${a.name}</p>
+      <div class="names">
+        <a href="person-details.html?id=${a.id}">
+          <p class="actor-name">${a.name}</p>
+        </a>
         <p class="character-name">${a.character}</p>
       </div>
     </div>
@@ -227,10 +229,8 @@ async function displayPersonDetails() {
   const personId = window.location.search.split("=")[1];
 
   const personDetails = await fetchAPIData(`person/${personId}`);
-  // const personDetails = await fetchAPIData(`person/${personId}/movie_credits`);
 
   const age = calcAge(personDetails.birthday, personDetails.deathday);
-  console.log(age);
 
   const div = document.createElement("div");
 
@@ -262,7 +262,52 @@ async function displayPersonDetails() {
           
         </div>`;
 
+  displayMediaCredits(personId);
+
   document.querySelector("#person-details").appendChild(div);
+}
+
+async function displayMediaCredits(personId) {
+  let personMovieCredits = await fetchAPIData(`person/${personId}/movie_credits`);
+  let personShowCredits = await fetchAPIData(`person/${personId}/tv_credits`);
+  console.log(personMovieCredits.cast[0]);
+  console.log(personShowCredits.cast[0]);
+
+  personShowCredits.cast.forEach((e) => {
+    e.release_date = e.first_air_date;
+    e.title = e.name;
+  });
+
+  personMovieCredits.cast = [...personMovieCredits.cast, ...personShowCredits.cast];
+
+  console.log(personMovieCredits);
+
+  personMovieCredits.cast.sort((one, two) => (one.release_date > two.release_date ? -1 : one.release_date < two.release_date ? 1 : 0));
+
+  const movieCredits = document.createElement("div");
+  movieCredits.setAttribute("id", "movie-credits");
+  document.querySelector(".details-bottom").appendChild(movieCredits);
+
+  personMovieCredits.cast.forEach((c) => {
+    const credit = document.createElement("div");
+    credit.setAttribute("class", "credit");
+
+    credit.innerHTML = `
+      <div class="movie-poster">
+      <a href="${c.episode_count ? "tv" : "movie"}-details.html?id=${c.id}">
+      <img src="${c.poster_path ? `https://image.tmdb.org/t/p/w200${c.poster_path}` : `images/no-image.jpg`}" alt="${c.title}" title="${c.title}">
+      </a>
+      </div>
+      <div>
+      <a class="movie-title" href="${c.episode_count ? "tv" : "movie"}-details.html?id=${c.id}">
+      <p class="">${c.title}</p>
+      </a>
+      <p class="character-name">${c.character ? c.character : "Unknown"}</p>
+      </div>
+      <p class="release-date">${c.release_date}</p>
+      `;
+    document.querySelector("#movie-credits").appendChild(credit);
+  });
 }
 
 function calcAge(born, death) {
@@ -286,7 +331,6 @@ function calcAge(born, death) {
   }
 
   return years;
-  return;
 }
 
 function showSpinner() {
@@ -530,7 +574,8 @@ async function searchAPIData() {
 // init app
 function init() {
   // const start = "/011_%20flixx_movie_app";
-  const start = "/modern_js_form_the_beginning_2.0/011_%20flixx_movie_app";
+  // const start = "/modern_js_form_the_beginning_2.0/011_%20flixx_movie_app";
+  const start = "";
   switch (global.currentPage) {
     case `${start}/`:
     case `${start}/index.html`:

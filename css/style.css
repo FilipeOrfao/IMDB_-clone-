@@ -254,8 +254,7 @@ section h2 {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-#cast {
-}
+/* Cast */
 
 .actor {
   display: grid;
@@ -275,6 +274,51 @@ section h2 {
   position: relative;
   overflow: hidden;
   border-radius: 50% 0 0 50%;
+}
+
+.actor .names {
+  margin: auto 1rem;
+}
+
+/* Person */
+
+#movie-credits {
+  padding: 2rem;
+  border: 2px solid #ccc;
+  border-radius: 1rem;
+}
+
+#movie-credits img {
+  width: 4rem;
+}
+
+.credit {
+  display: grid;
+  grid-template-columns: 5rem 10rem 6rem;
+  /* grid-template-columns: repeat(4, 6rem); */
+}
+
+#movie-credits div,
+.release-date {
+  margin: auto 0rem;
+}
+
+.movie-poster {
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  /* background-color: red; */
+}
+.movie-poster a {
+  padding-top: 0.5rem;
+}
+
+.credit:nth-child(odd) {
+  background-color: #ccc;
+}
+
+#movie-credits .movie-title {
+  font-weight: 800;
 }
 
 /* Search */
